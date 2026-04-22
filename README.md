@@ -1,213 +1,154 @@
-# Retail AI Assistant — Architecture Document
+# 🛍️ Retail AI Assistant
 
-## 1. Overview
+An agentic AI system that simulates a real-world e-commerce assistant with two core capabilities:
 
-The Retail AI Assistant is a simulation-based agentic system designed to perform two key roles:
+- 🛒 **Personal Shopper (Revenue Agent)** — recommends products based on user preferences
+- 📦 **Customer Support Assistant (Operations Agent)** — evaluates return eligibility using business rules
 
-1. **Personal Shopper (Revenue Agent)** — recommends products based on user preferences and constraints
-2. **Customer Support Assistant (Operations Agent)** — evaluates return eligibility using business policies
-
-The system is built using a **tool-calling architecture**, where the language model acts as a controller and delegates all factual operations to structured tools. This ensures high accuracy, explainability, and zero hallucination.
+Built using a **tool-calling architecture**, ensuring high accuracy, zero hallucination, and explainable outputs.
 
 ---
 
-## 2. System Architecture
+## 🚀 Features
 
-The system follows a modular, layered design:
+- ✅ AI-powered product recommendations
+- ✅ Rule-based return eligibility decisions
+- ✅ Multi-step tool execution
+- ✅ Conversation memory support
+- ✅ No hallucination (strict tool-based data access)
+- ✅ CLI-based interactive interface
 
-```
+---
+
+## 🧠 Architecture Overview
+
+
 User Input
-   ↓
+↓
 LLM Agent (Decision Layer)
-   ↓
+↓
 Tool Selection (Function Calling)
-   ↓
+↓
 Tool Execution (Data Layer)
-   ↓
+↓
 Structured Output
-   ↓
-LLM (Reasoning + Explanation)
-```
+↓
+LLM (Final Response)
 
-### Components:
 
-* **Agent Layer (`agent/`)**
+### 🔹 Key Design Principles
 
-  * Handles reasoning and decision-making
-  * Uses system prompt to enforce rules and behavior
-
-* **Tool Layer (`tools/`)**
-
-  * Contains deterministic functions:
-
-    * `search_products(filters)`
-    * `get_product(product_id)`
-    * `get_order(order_id)`
-    * `evaluate_return(order_id)`
-
-* **Data Layer (`data/`)**
-
-  * CSV files for products and orders
-  * Policy text for return rules
-
-* **CLI Interface (`main.py`)**
-
-  * Provides interactive user interface
-  * Maintains conversation memory
+- LLM handles **reasoning only**
+- Tools handle **all factual data**
+- No direct data generation by the model
+- Deterministic and explainable outputs
 
 ---
 
-## 3. Tool-Based Design
+## 📁 Project Structure
 
-The system strictly separates **reasoning from data access**:
 
-* The LLM **never generates product or order data**
-* All factual information is retrieved via tools
-* Business rules are implemented in `evaluate_return()`
+Retail-AI-Assistant/
+│
+├── agent/
+│ ├── agent.py # Core agent logic
+│ ├── prompts.py # System prompt
+│
+├── tools/
+│ ├── order_tools.py
+│ ├── product_tools.py
+│ ├── product_tools.py
+│ 
+│
+├── data/
+│ ├── products_inventory.csv
+│ ├── orders.csv
+│ ├── policy.txt
+│
+├── main.py # CLI interface
+├── requirements.txt
+├── .env.example
+└── README.md
 
-### Tool Responsibilities:
-
-| Tool            | Purpose                               |
-| --------------- | ------------------------------------- |
-| search_products | Filters products based on constraints |
-| get_product     | Fetches product details               |
-| get_order       | Retrieves order information           |
-| evaluate_return | Applies return policy rules           |
-
----
-
-## 4. Multi-Step Tool Execution
-
-The agent uses a **loop-based execution model**:
-
-* The LLM can call multiple tools in sequence
-* Example (support query):
-
-  1. `get_order(order_id)`
-  2. `evaluate_return(order_id)`
-  3. Final response generation
-
-A maximum step limit is enforced to prevent infinite loops.
 
 ---
 
-## 5. Hallucination Prevention
+## ⚙️ Setup Instructions
 
-The system is explicitly designed to avoid hallucination:
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/yashgautam1998/Retail-AI-Assistant.git
+cd Retail-AI-Assistant
+2️⃣ Create virtual environment
+python -m venv venv
+3️⃣ Activate virtual environment
 
-* All factual responses depend on tool outputs
-* The agent is instructed to **never guess missing data**
-* If a tool returns no result:
+Windows (PowerShell):
 
-  * The agent refuses with a clear message
-* Return decisions are **rule-based**, not inferred
+.\venv\Scripts\Activate
 
-This ensures deterministic and trustworthy outputs.
+Mac/Linux:
 
----
+source venv/bin/activate
+4️⃣ Install dependencies
+pip install -r requirements.txt
+5️⃣ Setup environment variables
+Copy .env.example → .env
+Add your OpenAI API key:
+OPENAI_API_KEY=your_openai_key_here
+6️⃣ Run the application
+python main.py
+💬 Example Usage
+🛍️ Retail AI Assistant (CLI)
+Type 'exit' to quit
 
-## 6. Personal Shopper Logic
+You: Show me dresses under $200 in size M
+AI: Here are some great options...
 
-The recommendation system applies **multi-constraint filtering**:
+You: Can I return order #1234?
+AI: This item is eligible for exchange only...
+🛠️ Tools
+Tool	Description
+search_products	Filters products based on constraints
+get_product	Fetches product details
+get_order	Retrieves order information
+evaluate_return	Applies return policy rules
+🔄 Multi-Step Execution
 
-* Price filtering (e.g., under $300)
-* Size availability + stock validation
-* Tag matching (e.g., “modest”, “evening”)
-* Sale prioritization
-* Ranking using `bestseller_score`
+The agent can call multiple tools in sequence:
 
-### Fallback Strategy:
+Example flow:
 
-If no exact match is found:
+get_order(order_id)
+evaluate_return(order_id)
+Generate final response
+🛡️ Hallucination Prevention
+❌ Model never generates product/order data
+✅ All data comes from tools
+✅ Strict refusal if data not found
+✅ Rule-based return decisions
+🛍️ Personal Shopper Logic
+Price filtering
+Size + stock validation
+Tag-based matching
+Bestseller ranking
+Sale prioritization
 
-1. Relax tag constraints
-2. Remove sale filter
-3. Return closest matches
+Fallback strategy:
 
-This mimics real-world e-commerce behavior.
+Relax filters if no exact match found
+📦 Return Policy Logic
 
----
+Policy precedence:
 
-## 7. Support Assistant Logic
-
-Return decisions are handled using a **rule-based engine**:
-
-### Policy Precedence:
-
-1. Clearance items → not returnable
-2. Vendor exceptions:
-
-   * Aurelia Couture → exchange only
-   * Nocturne → 21-day return window
-3. Sale items → 7 days (store credit only)
-4. Normal items → 14 days (refund)
-
-The agent:
-
-* Calls `evaluate_return()`
-* Explains the applied rule
-* Provides a clear decision (yes/no + type)
-
----
-
-## 8. Conversation Memory
-
-The system maintains a shared message history across turns:
-
-* Enables multi-turn interactions
-* Supports confirmations like “yes”
-* Preserves context (e.g., order ID)
-
-Example:
-
-```
-User: Can I return this?
-AI: Exchange only
-User: Yes
-AI: Proceeding with exchange...
-```
-
----
-
-## 9. Tool Selection Strategy
-
-The LLM dynamically selects tools based on intent:
-
-| User Query             | Tool Used       |
-| ---------------------- | --------------- |
-| Product recommendation | search_products |
-| Order lookup           | get_order       |
-| Return query           | evaluate_return |
-
-This allows flexible and intelligent behavior without hardcoding flows.
-
----
-
-## 10. Design Decisions
-
-### Why not use RAG or embeddings?
-
-* Data is structured (CSV), not unstructured text
-* Requires exact filtering and rule-based decisions
-* Deterministic logic is more reliable than semantic search
-
-### Why tool-based architecture?
-
-* Ensures correctness and explainability
-* Scales easily with additional tools
-* Prevents hallucination
-
----
-
-## 11. Conclusion
-
-This system demonstrates a production-style agent architecture combining:
-
-* Tool-based data retrieval
-* Rule-based reasoning
-* Multi-step execution
-* Conversational memory
-
-It achieves high accuracy, transparency, and robustness while remaining modular and extensible for future enhancements.
-
----
+Clearance → Not returnable
+Vendor rules:
+Aurelia Couture → Exchange only
+Nocturne → 21-day return window
+Sale items → 7 days (store credit)
+Regular items → 14 days (refund)
+💡 Why Tool-Based Architecture?
+✔ High accuracy
+✔ No hallucination
+✔ Easy to scale
+✔ Clear separation of concerns
