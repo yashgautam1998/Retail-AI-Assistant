@@ -46,33 +46,27 @@ LLM (Final Response)
 ---
 
 ## 📁 Project Structure
-
-
 Retail-AI-Assistant/
 │
 ├── agent/
 │ ├── agent.py # Core agent logic
-│ ├── prompts.py # System prompt
+│ └── prompts.py # System prompt
 │
 ├── tools/
 │ ├── order_tools.py
-│ ├── product_tools.py
-│ ├── product_tools.py
-│ 
+│ └── product_tools.py
 │
 ├── data/
 │ ├── products_inventory.csv
 │ ├── orders.csv
-│ ├── policy.txt
+│ └── policy.txt
 │
 ├── main.py # CLI interface
 ├── requirements.txt
 ├── .env.example
 └── README.md
 
-
 ---
-
 ## ⚙️ Setup Instructions
 
 ### 1️⃣ Clone the repository
@@ -93,8 +87,9 @@ source venv/bin/activate
 4️⃣ Install dependencies
 pip install -r requirements.txt
 5️⃣ Setup environment variables
+
 Copy .env.example → .env
-Add your OpenAI API key:
+
 OPENAI_API_KEY=your_openai_key_here
 6️⃣ Run the application
 python main.py
